@@ -1,0 +1,7 @@
+node_modules/
+.firecrawl/
+test/fixtures/*.srt
+README.local.md
+start-local.command
+.DS_Store
+.idea/
