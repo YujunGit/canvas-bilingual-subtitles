@@ -1,12 +1,12 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 const {version}=JSON.parse(await readFile('package.json','utf8'));
-const updateBase=process.argv.includes('--local') ? 'http://127.0.0.1:8765' : 'https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist';
+const updateBase=process.argv.includes('--local') ? 'http://127.0.0.1:8765' : 'https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download';
 const header=`// ==UserScript==
 // @name         Canvas / Kaltura Bilingual Subtitles
 // @namespace    local.canvas-bilingual
 // @license      MIT
 // @version      ${version}
-// @updateURL    ${updateBase}/canvas-bilingual.meta.js
+// @updateURL    ${updateBase}/canvas-bilingual.user.js
 // @downloadURL  ${updateBase}/canvas-bilingual.user.js
 // @description  Inspect player, import SRT, translate with Google v2 or Azure
 // @match        https://*.instructure.com/*

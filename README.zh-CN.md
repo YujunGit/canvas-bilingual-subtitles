@@ -45,11 +45,13 @@
 ## 安装
 
 1. 为浏览器安装 [Tampermonkey](https://www.tampermonkey.net/)，按扩展提示启用用户脚本及目标站点访问权限。
-2. 打开仓库中的 `dist/canvas-bilingual.user.js`，查看 **Raw / 原始内容**。
+2. 打开[最新 Release 的完整脚本](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)。
 3. 如果 Tampermonkey 弹出安装页，确认安装；否则创建新脚本，用文件的**完整内容替换**默认模板并保存。
 4. 刷新 Canvas 课程页面。
 
 更新时替换已有脚本的完整内容，不要把新代码追加到旧代码末尾。保留脚本名称和 namespace，避免创建重复实例。
+
+新版通过 GitHub Releases 分发，`@updateURL` 与 `@downloadURL` 均指向完整 `.user.js` 附件，不使用仅含元数据的文件。请在 Tampermonkey 中启用更新检查。如果此前手动覆盖过脚本的 Update URL，请将其改为[最新 Release 的完整脚本地址](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)并保存。已有用户可通过该文件覆盖更新一次完成迁移，无需先卸载。更新后刷新课程页面。
 
 ## 快速开始
 
@@ -162,6 +164,12 @@ npm test
 ## 更新记录
 
 以下记录按版本倒序排列；版本日期为实现日期，不代表已发布 GitHub Release。
+
+### v0.3.4 · 2026-11-12
+
+- 将公开更新与下载地址统一切换至最新 GitHub Release 的完整 `.user.js` 附件。
+- 补充旧更新地址的迁移说明，安装入口改为最新 Release。
+- 保留本地构建模式，更新检查和下载也统一使用完整脚本。
 
 ### v0.3.3 · 2026-11-12
 

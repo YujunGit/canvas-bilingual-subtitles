@@ -45,11 +45,13 @@ This integration is exploratory. The current version does not support Apple Tran
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser and follow its prompts to enable userscripts and access to the target sites.
-2. Open `dist/canvas-bilingual.user.js` in this repository and select **Raw**.
+2. Open the [latest release userscript](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js).
 3. If Tampermonkey opens an installation page, confirm installation. Otherwise, create a new script, **replace the entire default template** with the file contents, and save.
 4. Refresh your Canvas course page.
 
 To update, replace the existing script's complete contents. Do not append new code to the old version. Keep the script name and namespace to avoid duplicate installations.
+
+Updates are served from GitHub Releases. Both `@updateURL` and `@downloadURL` point to the complete `.user.js` asset, not the metadata-only file. Enable update checks in Tampermonkey. If you previously overrode the script's Update URL, set it to the [latest release userscript](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js) and save. Existing users can install that file over their current script once to migrate; do not uninstall first. Refresh the course page after updating.
 
 ## Quick start
 
@@ -168,6 +170,12 @@ Results must match the input length and order. Update the cache version or cache
 ## Changelog
 
 Versions are listed newest first. Dates indicate implementation dates, not published GitHub Releases.
+
+### v0.3.4 · 2026-11-12
+
+- Move public update and download URLs to the latest GitHub Release’s complete `.user.js` asset.
+- Document migration from previous update URLs and link installation to the latest release.
+- Keep local builds available, using the complete script for both update checks and downloads.
 
 ### v0.3.3 · 2026-11-12
 

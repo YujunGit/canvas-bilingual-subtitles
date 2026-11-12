@@ -2,9 +2,9 @@
 // @name         Canvas / Kaltura Bilingual Subtitles
 // @namespace    local.canvas-bilingual
 // @license      MIT
-// @version      0.3.3
-// @updateURL    https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.meta.js
-// @downloadURL  https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.user.js
+// @version      0.3.4
+// @updateURL    https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js
+// @downloadURL  https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js
 // @description  Inspect player, import SRT, translate with Google v2 or Azure
 // @match        https://*.instructure.com/*
 // @match        https://cdnapisec.kaltura.com/*
@@ -493,7 +493,7 @@ async function getKalturaSRT(signal,progress=()=>{}) {
   const root=host.attachShadow({mode:'closed'});
   root.innerHTML=`<style>
   *{box-sizing:border-box} :host{font:14px/1.5 system-ui;color:#e9eef9}button,input,select{font:inherit}button{cursor:pointer;background:#2463bb;color:white;border:0;border-radius:6px;padding:6px 10px;margin:3px}button:disabled{opacity:.5;cursor:default}section{position:fixed;background:#172235;padding:14px;border:1px solid #53647b;border-radius:12px;width:340px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0008}label{display:block;margin:8px 0}input:not([type=checkbox]),select{display:block;width:100%;padding:5px;background:#fff;color:#111;border-radius:4px;border:1px solid #aaa}input[type=color]{height:36px;padding:2px;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace}small{color:#b9c9df}h3{margin:0} [hidden]{display:none!important}</style>
-  <button id="toggle">双语字幕</button><section hidden id="panel"><h3>Canvas 双语字幕 · v0.3.3</h3>
+  <button id="toggle">双语字幕</button><section hidden id="panel"><h3>Canvas 双语字幕 · v0.3.4</h3>
   <small>可自动获取当前视频的英文 SRT；开启自动翻译后会发送给所选服务。</small>
   <button id="inspect">检测播放器</button><label>绑定视频<select id="video"></select></label><small id="playerSummary"></small><details><summary>高级诊断（排查时展开）</summary><pre id="diagnostic"></pre></details>
   <button id="autoGet">自动获取并翻译</button><label><input id="autoImport" type="checkbox"> 打开视频后自动获取英文字幕</label><label><input id="autoTranslate" type="checkbox"> 获取后自动翻译（可能按量计费）</label><small id="subtitleSource">尚未导入字幕</small><label>手动导入英文 SRT<input id="file" type="file" accept=".srt,text/plain,application/x-subrip"></label>

@@ -2,9 +2,9 @@
 // @name         Canvas / Kaltura Bilingual Subtitles
 // @namespace    local.canvas-bilingual
 // @license      MIT
-// @version      0.3.3
-// @updateURL    https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.meta.js
-// @downloadURL  https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.user.js
+// @version      0.3.4
+// @updateURL    https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js
+// @downloadURL  https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js
 // @description  Inspect player, import SRT, translate with Google v2 or Azure
 // @match        https://*.instructure.com/*
 // @match        https://cdnapisec.kaltura.com/*
