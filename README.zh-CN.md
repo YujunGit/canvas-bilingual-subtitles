@@ -2,9 +2,11 @@
 
 [English](README.md) | **简体中文**
 
-为 Canvas 中的 Kaltura 课程视频添加同步双语字幕的 Tampermonkey 用户脚本。支持自动获取英文 SRT，通过 Google Cloud Translation 或 Azure AI Translator 翻译，并缓存结果。
+为 Canvas 中的 Kaltura 视频添加同步双语字幕：获取英文字幕，使用你自己的翻译 API 翻译，并在播放器中显示。
 
-> 自动获取适配 Kaltura PlayKit 的字幕下载面板。不同学校的播放器配置可能不同；无法自动获取时，可手动导入 SRT。
+**[安装最新版本](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)** · [安装步骤](#安装) · [效果演示](#效果演示) · [常见问题](#常见问题)
+
+需要：**Tampermonkey 扩展 + Google 或 Azure 翻译 API Key**。无需下载整个仓库或运行命令。翻译服务可能收费；自动翻译默认关闭。
 
 ## 功能
 
@@ -17,6 +19,9 @@
 - **轻量设置面板**：按钮可拖动并记住位置，诊断信息默认折叠。
 
 ## 未来更新计划
+
+<details>
+<summary>展开计划：更多 API、更多语言、macOS 系统翻译</summary>
 
 以下为规划方向，尚未实现；具体服务、兼容范围和发布顺序将根据可行性验证与使用反馈调整。
 
@@ -42,47 +47,91 @@
 
 该方向仍处于方案探索阶段，目前版本尚不支持 Apple Translation，也不承诺所有语言或 macOS 版本均可用。
 
+</details>
+
 ## 安装
 
-1. 为浏览器安装 [Tampermonkey](https://www.tampermonkey.net/)，按扩展提示启用用户脚本及目标站点访问权限。
-2. 打开[最新 Release 的完整脚本](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)。
-3. 如果 Tampermonkey 弹出安装页，确认安装；否则创建新脚本，用文件的**完整内容替换**默认模板并保存。
-4. 刷新 Canvas 课程页面。
+1. **安装扩展**：安装 [Tampermonkey](https://www.tampermonkey.net/)，按提示启用用户脚本及站点访问权限。
+2. **安装脚本**：点击[安装最新版本](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)，在 Tampermonkey 页面点击 **Install / 安装**；已有脚本则点击 **Update / 更新**。
+3. **打开视频**：刷新 Canvas 课程页面，加载 Kaltura 视频。看到播放器内的「双语字幕」按钮即表示脚本已运行。
 
-更新时替换已有脚本的完整内容，不要把新代码追加到旧代码末尾。保留脚本名称和 namespace，避免创建重复实例。
+<details>
+<summary>点击安装后只下载了文件，或显示了一页代码？</summary>
 
-新版通过 GitHub Releases 分发，`@updateURL` 与 `@downloadURL` 均指向完整 `.user.js` 附件，不使用仅含元数据的文件。请在 Tampermonkey 中启用更新检查。如果此前手动覆盖过脚本的 Update URL，请将其改为[最新 Release 的完整脚本地址](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)并保存。已有用户可通过该文件覆盖更新一次完成迁移，无需先卸载。更新后刷新课程页面。
+用文本编辑器打开下载的 `canvas-bilingual.user.js`（或复制网页上的全部代码），在 Tampermonkey 管理面板中新建脚本，**全选替换**默认模板后保存。已有脚本请在原脚本中全选替换，不要追加代码或重复安装。
 
-## 快速开始
+只安装 `.user.js`，不要安装 `.meta.js` 或 Source code 压缩包。
 
-### 1. 配置翻译服务
+</details>
 
-打开**播放器内部**的「双语字幕」面板，选择翻译服务、填写 API Key 和目标语言，然后点击「保存设置」。Google 与 Azure 的密钥分别保存。
+## 首次使用
 
-| 服务 | 必填设置 | 说明 |
-| --- | --- | --- |
-| Google Cloud Translation Basic v2 | API Key、目标语言 | 使用已开通相应 API 的项目密钥 |
-| Azure AI Translator | API Key、目标语言 | 按资源配置填写区域；适用的全局单服务资源可留空 |
+1. 打开**播放器内部**的「双语字幕」面板，选择翻译服务、填写 API Key 和目标语言，点击「保存设置」。
+2. 等待英文字幕自动导入；成功后面板会显示文件名和字幕段数。
+3. 点击「批量翻译」。也可以点击「自动获取并翻译」，一次完成获取与翻译。
+4. 播放视频，查看英文和译文。想让后续视频也自动翻译，可勾选「获取后自动翻译」。
 
-目标语言提供简体中文、繁体中文、日语和韩语。源语言为英语。
+| 翻译服务 | 需要填写 |
+| --- | --- |
+| Google Cloud Translation Basic v2 | 已启用对应 API 的项目密钥、目标语言 |
+| Azure AI Translator | 密钥、目标语言，以及资源要求的区域（适用的全局单服务资源可留空） |
 
-### 2. 获取字幕
+目前支持**英语 → 简体中文、繁体中文、日语、韩语**。Google 与 Azure 密钥分别保存。
 
-加载课程视频，必要时先点击播放。默认启用「打开视频后自动获取英文字幕」。获取成功后，面板会显示文件名和字幕段数。
+**无法自动获取？** 在播放器下载面板下载英文 SRT，再用「手动导入英文 SRT」导入，然后点击「批量翻译」。自动获取依赖播放器提供唯一的英文 SRT，不保证适用于所有学校配置。
 
-自动获取失败时，从播放器右上角下载面板下载英文 `.srt`，再使用「手动导入英文 SRT」。不带时间戳的普通转录文本不能用于同步。
+## 效果演示
 
-### 3. 翻译与显示
+### 截图
 
-- 点击「自动获取并翻译」，执行一次获取、导入和翻译。
-- 已导入字幕时，点击「批量翻译」。
-- 勾选「获取后自动翻译」后，后续视频会自动继续翻译；此开关立即保存。**自动翻译默认关闭**，启用后可能产生 API 费用。
+<!-- DEMO_SCREENSHOT_START: replace the placeholder below with the image Markdown from docs/media/README.md. -->
 
-显示模式首次默认为双语，可切换为仅英文或仅译文；选择后自动保存，刷新页面时恢复上次选择，无需点击「保存设置」。字幕不同步时可调整延迟：正数让字幕晚出现。若与原播放器字幕重叠，可手动关闭播放器自带字幕。
+![播放器中的双语字幕效果](docs/media/screenshot.png)
 
-在面板中拖动「字幕背景透明度」滑块即时预览，松开后自动保存：0% 为不透明背景，100% 为完全透明，文字不受影响。默认透明度为 22%。通过「字幕文字颜色」和「字幕背景颜色」选择颜色，调整时即时预览，确认后自动保存；默认白字、黑色背景，背景颜色与透明度一起生效。
+<!-- DEMO_SCREENSHOT_END -->
 
-字幕显示时，按住字幕区域拖动即可调整位置，松开后自动保存。位置限制在视频范围内，按相对位置适配视频尺寸变化；鼠标移到字幕框上可看到左右边缘手柄，拖动任意一侧调整宽度，另一侧保持不动，文字随宽度自动换行。宽度按视频比例保存（20%–100%，默认 88%），可点击「恢复字幕默认宽度」重置。点击「恢复字幕默认位置」可回到底部。外观设置按站点与页面／播放器帧分别保存。
+### 视频
+
+<!-- DEMO_VIDEO_START: replace the placeholder below with the uploaded GitHub video attachment URL on its own line. -->
+
+https://github.com/user-attachments/assets/77f852fa-c377-4738-bd02-1f282a2d891d
+
+<!-- DEMO_VIDEO_END -->
+
+<!-- Maintainer: see docs/media/README.md for upload instructions. Do not use school course material without permission. -->
+
+## 调整字幕
+
+| 想做什么 | 操作 |
+| --- | --- |
+| 移动字幕 | 按住字幕中间拖动，松开自动保存 |
+| 改变宽度 | 鼠标移到字幕框上，拖动左右边缘手柄；另一边保持不动 |
+| 改变颜色 | 在面板选择「字幕文字颜色」或「字幕背景颜色」 |
+| 改变背景透明度 | 拖动透明度滑块：0% 不透明，100% 完全透明，文字不受影响 |
+| 只看英文或译文 | 切换「显示模式」，自动记住选择；首次默认为双语 |
+| 调整同步 | 设置字幕延迟；正数让字幕晚出现 |
+| 恢复位置或宽度 | 点击对应的「恢复默认」按钮 |
+
+默认白字黑底、背景透明度 22%、宽度为视频的 88%；宽度可调范围为 20%–100%，文字自动换行。位置与宽度按视频比例保存，外观设置按站点与页面／播放器帧分别保存。若字幕重叠，可关闭播放器自带字幕。
+
+## 更新脚本
+
+在 Tampermonkey 中启用更新检查，即可定期从 GitHub Release 获取新版。更新后刷新课程页面；无需先卸载。
+
+手动更新：再次打开[最新完整脚本](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)，覆盖更新现有脚本。
+
+<details>
+<summary>旧版迁移，或更新地址曾手动修改过？</summary>
+
+先通过上面的链接覆盖安装完整脚本。若 Settings 中手动设置过 Update URL，将其改为下面的地址并保存：
+
+```text
+https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js
+```
+
+`@updateURL` 与 `@downloadURL` 均使用这个完整脚本地址。不要把 `.meta.js` 当作安装文件。
+
+</details>
 
 ## 兼容性与限制
 
@@ -171,6 +220,9 @@ npm test
 - 补充旧更新地址的迁移说明，安装入口改为最新 Release。
 - 保留本地构建模式，更新检查和下载也统一使用完整脚本。
 
+<details>
+<summary>历史版本（v0.3.3 及更早）</summary>
+
 ### v0.3.3 · 2026-11-12
 
 - 支持拖动字幕框左右边缘调整宽度，自动保存，并提供恢复默认宽度按钮。
@@ -235,6 +287,8 @@ npm test
 - 支持手动导入英文 SRT、配置面板、密钥保存、批量翻译、去重缓存及取消操作。
 - 实现双语、仅英文、仅译文显示，以及字幕同步和时间偏移。
 - 提供播放器诊断、iframe 兼容说明和可扩展的 Provider Adapter 接口。
+
+</details>
 
 ## 参考资料
 

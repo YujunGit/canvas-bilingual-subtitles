@@ -6,3 +6,8 @@ README.local.md
 start-local.command
 .DS_Store
 .idea/
+
+# Demo videos are uploaded as GitHub attachments, not committed.
+docs/media/*.mov
+docs/media/*.mp4
+docs/media/README.md

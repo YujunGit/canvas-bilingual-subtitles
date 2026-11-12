@@ -2,9 +2,11 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-A Tampermonkey userscript that adds synchronized bilingual subtitles to Kaltura course videos in Canvas. Automatically import English SRT captions, translate them with Google Cloud Translation or Azure AI Translator, and cache the results.
+Watch Canvas / Kaltura videos with synchronized bilingual subtitles. Import English captions, translate them using your own API key, and display both languages inside the player.
 
-> Automatic import targets the Kaltura PlayKit downloads panel. Player configurations vary between institutions; manual SRT import remains available when automatic retrieval fails.
+**[Install latest version](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js)** · [Installation](#installation) · [Demo](#demo) · [Troubleshooting](#troubleshooting)
+
+You need **Tampermonkey + a Google or Azure translation API key**. No repository download or terminal commands required. Translation may incur provider charges; automatic translation is off by default.
 
 ## Features
 
@@ -17,6 +19,9 @@ A Tampermonkey userscript that adds synchronized bilingual subtitles to Kaltura 
 - **Compact settings panel:** A draggable button with a saved position and diagnostics collapsed by default.
 
 ## Roadmap
+
+<details>
+<summary>Explore plans: more APIs, more languages, macOS translation</summary>
 
 These items are planned and **not yet implemented**. Providers, compatibility, and release order will depend on feasibility testing and user feedback.
 
@@ -42,49 +47,93 @@ These items are planned and **not yet implemented**. Providers, compatibility, a
 
 This integration is exploratory. The current version does not support Apple Translation, and support for every language or macOS version is not promised.
 
+</details>
+
 ## Installation
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser and follow its prompts to enable userscripts and access to the target sites.
-2. Open the [latest release userscript](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js).
-3. If Tampermonkey opens an installation page, confirm installation. Otherwise, create a new script, **replace the entire default template** with the file contents, and save.
-4. Refresh your Canvas course page.
+1. **Install the extension:** Get [Tampermonkey](https://www.tampermonkey.net/) and follow its prompts to enable userscripts and site access.
+2. **Install the script:** Open [Install latest version](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js) and click **Install** in Tampermonkey, or **Update** if already installed.
+3. **Open a video:** Refresh your Canvas course page and load a Kaltura video. The **双语字幕** (Bilingual Subtitles) button inside the player indicates that the script is running.
 
-To update, replace the existing script's complete contents. Do not append new code to the old version. Keep the script name and namespace to avoid duplicate installations.
+<details>
+<summary>The link downloads a file or displays code instead of opening Tampermonkey?</summary>
 
-Updates are served from GitHub Releases. Both `@updateURL` and `@downloadURL` point to the complete `.user.js` asset, not the metadata-only file. Enable update checks in Tampermonkey. If you previously overrode the script's Update URL, set it to the [latest release userscript](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js) and save. Existing users can install that file over their current script once to migrate; do not uninstall first. Refresh the course page after updating.
+Open the downloaded `canvas-bilingual.user.js` in a text editor (or copy all the code shown in the browser). Create a script in the Tampermonkey dashboard, **replace the entire default template**, and save. For an existing installation, replace its contents instead of appending code or creating a duplicate.
 
-## Quick start
+Install only the `.user.js` file, not `.meta.js` or the Source code archive.
 
-The current settings UI uses Chinese labels; the relevant labels are included below to help you locate each control.
+</details>
 
-### 1. Configure a translation provider
+## First use
 
-Open the **双语字幕** (Bilingual Subtitles) panel **inside the player**. Select a provider, enter your API key and target language, and click **保存设置** (Save settings). Google and Azure keys are stored separately.
+The settings UI currently uses Chinese labels; the labels below match the controls you will see.
 
-| Provider | Required settings | Notes |
-| --- | --- | --- |
-| Google Cloud Translation Basic v2 | API key, target language | Use a key from a project with the corresponding API enabled |
-| Azure AI Translator | API key, target language | Enter the region required by your resource; applicable global single-service resources may leave it empty |
+1. Open **双语字幕** (Bilingual Subtitles) **inside the player**. Select a provider, enter your API key and target language, then click **保存设置** (Save settings).
+2. Wait for English captions to import automatically. The panel will show the filename and cue count when ready.
+3. Click **批量翻译** (Batch translate). Alternatively, click **自动获取并翻译** (Retrieve and translate) to perform both steps.
+4. Play the video to see the original and translated captions. Enable **获取后自动翻译** (Translate automatically after retrieval) if you want subsequent videos translated automatically.
 
-Current target languages are Simplified Chinese, Traditional Chinese, Japanese, and Korean. The source language is English.
+| Provider | Settings required |
+| --- | --- |
+| Google Cloud Translation Basic v2 | A project API key with the API enabled, and target language |
+| Azure AI Translator | API key, target language, and the region required by your resource (applicable global single-service resources may leave it blank) |
 
-### 2. Import subtitles
+Currently supports **English → Simplified Chinese, Traditional Chinese, Japanese, or Korean**. Google and Azure keys are saved separately.
 
-Load the course video and start playback if necessary. **打开视频后自动获取英文字幕** (Automatically retrieve English subtitles after loading a video) is enabled by default. On success, the panel shows the filename and cue count.
+**Automatic import failed?** Download the English SRT from the player's downloads panel, select **手动导入英文 SRT** (Manually import English SRT), then click Batch translate. Automatic retrieval requires a single English SRT entry and may not work with every institution's player setup.
 
-If automatic retrieval fails, download the English `.srt` from the player's upper-right downloads panel and use **手动导入英文 SRT** (Manually import English SRT). Plain transcripts without timestamps cannot be synchronized.
+## Demo
 
-### 3. Translate and display
+### Screenshot
 
-- Click **自动获取并翻译** (Automatically retrieve and translate) to retrieve, import, and translate in one step.
-- If captions are already imported, click **批量翻译** (Batch translate).
-- Enable **获取后自动翻译** (Automatically translate after retrieval) to translate subsequent videos automatically. This setting saves immediately. **Automatic translation is off by default** and may incur API charges when enabled.
+<!-- DEMO_SCREENSHOT_START: replace the placeholder below with the image Markdown from docs/media/README.md. -->
 
-The initial display mode is bilingual. You can switch to original-only or translation-only; the choice saves automatically and is restored after refresh without clicking Save settings. Adjust the subtitle delay if needed: positive values make captions appear later. Disable the player's own captions manually if they overlap.
+![Bilingual subtitles displayed inside the video player](docs/media/screenshot.png)
 
-Use **字幕背景透明度** (Subtitle background transparency) for a live preview; releasing the slider saves the setting. At 0% the background is opaque, and at 100% it is fully transparent. Text remains opaque. The default transparency is 22%. Use **字幕文字颜色** (Subtitle text color) and **字幕背景颜色** (Subtitle background color) to preview colors and save them on confirmation. Defaults are white text on a black background; background color and transparency work together.
+<!-- DEMO_SCREENSHOT_END -->
 
-Drag the visible subtitle area to reposition it; releasing saves the position. The box stays inside the video and uses relative positioning when video dimensions change. Hover over the subtitle box to reveal handles on its left and right edges. Drag either edge to resize it while keeping the opposite edge fixed; text wraps to the new width. Width is saved as a proportion of the video (20–100%, default 88%). Use **恢复字幕默认宽度** (Restore default subtitle width) to reset it. Click **恢复字幕默认位置** (Restore default subtitle position) to return to the bottom. Appearance settings are saved separately by site and page/player-frame context.
+### Video
+
+<!-- DEMO_VIDEO_START: replace the placeholder below with the uploaded GitHub video attachment URL on its own line. -->
+
+https://github.com/user-attachments/assets/77f852fa-c377-4738-bd02-1f282a2d891d
+
+<!-- DEMO_VIDEO_END -->
+
+<!-- Maintainer: see docs/media/README.md for upload instructions. Do not use school course material without permission. -->
+
+## Customize subtitles
+
+| Goal | Control |
+| --- | --- |
+| Move captions | Drag the middle of the subtitle box; release to save |
+| Resize the box | Hover over it and drag either side handle; the opposite edge stays fixed |
+| Change colors | Use 字幕文字颜色 (Text color) or 字幕背景颜色 (Background color) |
+| Change transparency | Adjust the slider: 0% is opaque, 100% is transparent; text stays opaque |
+| Show only one language | Change 显示模式 (Display mode); the choice is remembered, with bilingual as the initial default |
+| Correct timing | Adjust subtitle delay; positive values show captions later |
+| Reset layout | Use the restore-default position or width buttons |
+
+Defaults: white text, black background, 22% background transparency, and 88% video width. Width ranges from 20–100%, with automatic text wrapping. Position and width are relative to the video; appearance is saved separately by site and page/player-frame context. Disable the player's own captions if they overlap.
+
+## Updating
+
+Enable update checks in Tampermonkey to periodically retrieve new GitHub Releases. Refresh the course page after updating; do not uninstall first.
+
+To update manually, open the [latest complete userscript](https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js) again and update the existing installation.
+
+<details>
+<summary>Migrating an older version or a manually overridden update URL?</summary>
+
+Install the complete script from the link above over your existing installation. If you manually set Update URL in Settings, replace it with this address and save:
+
+```text
+https://github.com/YujunGit/canvas-bilingual-subtitles/releases/latest/download/canvas-bilingual.user.js
+```
+
+Both `@updateURL` and `@downloadURL` use this complete script address. Do not install the `.meta.js` file.
+
+</details>
 
 ## Compatibility and limitations
 
@@ -177,6 +226,9 @@ Versions are listed newest first. Dates indicate implementation dates, not publi
 - Document migration from previous update URLs and link installation to the latest release.
 - Keep local builds available, using the complete script for both update checks and downloads.
 
+<details>
+<summary>Previous versions (v0.3.3 and earlier)</summary>
+
 ### v0.3.3 · 2026-11-12
 
 - Resize the subtitle box by dragging its left or right edge, with automatic width saving and a reset control.
@@ -241,6 +293,8 @@ Versions are listed newest first. Dates indicate implementation dates, not publi
 - Add manual English SRT import, a settings panel, key storage, batch translation, deduplication, caching, and cancellation.
 - Implement bilingual, original-only, and translation-only display with synchronization and timing offsets.
 - Add player diagnostics, iframe compatibility notes, and an extensible Provider Adapter interface.
+
+</details>
 
 ## References
 
