@@ -19,3 +19,26 @@ test('saved placement adapts to resized video and clamps at video edges',()=>{
   assert.deepEqual(subtitlePlacement(rect,880,100,{x:-5,y:8}),{left:100,top:450});
   assert.deepEqual(subtitlePlacement(rect,1000,500,{x:1,y:1}),{left:100,top:50});
 });
+
+import {subtitleWidth,resizeSubtitle} from '../src/player.js';
+test('resize either edge keeps opposite edge fixed and enforces minimum width',()=>{
+  const rect={left:100,width:1000},initial={left:160,right:1040};
+  for(const [side,pointer,expectedLeft,expectedRight] of [
+    ['left',400,400,1040],['right',700,160,700],
+    ['left',-100,100,1040],['right',1500,160,1100],
+    ['left',2000,840,1040],['right',0,160,360]
+  ]){
+    const result=resizeSubtitle(rect,initial,side,pointer);
+    const width=result.widthRatio*rect.width;
+    const left=rect.left+result.x*(rect.width-width);
+    assert(Math.abs(left-expectedLeft)<1e-8);
+    assert(Math.abs(left+width-expectedRight)<1e-8);
+  }
+});
+test('saved width defaults and full-width resize stay finite',()=>{
+  assert.equal(subtitleWidth(undefined),.88);
+  assert.equal(subtitleWidth(NaN),.88);
+  assert.equal(subtitleWidth(.01),.2);
+  assert.equal(subtitleWidth(2),1);
+  assert.deepEqual(resizeSubtitle({left:0,width:500},{left:0,right:400},'right',600),{widthRatio:1,x:.5});
+});

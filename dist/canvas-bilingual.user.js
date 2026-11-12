@@ -2,7 +2,7 @@
 // @name         Canvas / Kaltura Bilingual Subtitles
 // @namespace    local.canvas-bilingual
 // @license      MIT
-// @version      0.3.2
+// @version      0.3.3
 // @updateURL    https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.meta.js
 // @downloadURL  https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.user.js
 // @description  Inspect player, import SRT, translate with Google v2 or Azure
@@ -215,13 +215,35 @@ function subtitlePlacement(rect, width, height, position) {
   return {left:rect.left + (custom ? clampSubtitle(position.x, 1) * dx : dx / 2),
     top:rect.top + (custom ? clampSubtitle(position.y, 1) * dy : Math.max(0, dy - Math.max(48, rect.height * .12)))};
 }
-function mountRenderer(getState, onPositionChange = () => {}) {
+function subtitleWidth(value) {
+  return Number.isFinite(value) ? Math.min(1,Math.max(.2,value)) : .88;
+}
+function resizeSubtitle(rect, initial, side, pointerX) {
+  const minWidth=rect.width*.2;
+  const edge=side==='left' ? initial.right : initial.left;
+  const left=side==='left' ? Math.max(rect.left,Math.min(pointerX,edge-minWidth)) : edge;
+  const right=side==='right' ? Math.min(rect.left+rect.width,Math.max(pointerX,edge+minWidth)) : edge;
+  const width=right-left, travel=rect.width-width;
+  return {widthRatio:subtitleWidth(width/rect.width),x:travel>0 ? (left-rect.left)/travel : .5};
+}
+function mountRenderer(getState, onPositionChange = () => {}, onWidthChange = () => {}) {
   const host = document.createElement('div');
   const shadow = host.attachShadow({mode:'closed'});
   const box = document.createElement('div');
   box.title='拖动字幕可调整位置';
   box.style.cssText='pointer-events:auto;cursor:grab;touch-action:none;user-select:none;box-sizing:border-box;white-space:pre-line;text-align:center;color:white;background:rgba(0,0,0,.78);padding:6px 12px;border-radius:6px;font:clamp(14px,2.1vw,24px)/1.4 system-ui;overflow-wrap:anywhere;max-height:40vh;overflow:hidden';
-  shadow.append(box);
+  const text=document.createElement('div');
+  box.append(text);
+  const style=document.createElement('style');
+  style.textContent='.resize-handle{position:absolute;top:0;bottom:0;width:12px;cursor:ew-resize;touch-action:none;opacity:0;border:0;padding:0;background:transparent}.resize-handle::after{content:"";position:absolute;top:25%;bottom:25%;left:4px;width:3px;background:white;box-shadow:0 0 2px black;border-radius:2px}div:hover>.resize-handle,.resize-handle:focus-visible{opacity:1}';
+  for(const side of ['left','right']){
+    const handle=document.createElement('span');
+    handle.className='resize-handle';handle.dataset.side=side;handle.style[side]='0';
+    handle.title=side==='left'?'拖动左边缘调整宽度':'拖动右边缘调整宽度';
+    box.append(handle);
+  }
+  box.style.position='relative';
+  shadow.append(style,box);
   host.style.cssText='position:fixed;pointer-events:none;z-index:2147483646;display:none';
   document.documentElement.append(host);
   let last = '', drag = null;
@@ -231,19 +253,31 @@ function mountRenderer(getState, onPositionChange = () => {}) {
     if (box.hasPointerCapture(previous.id)) box.releasePointerCapture(previous.id);
     box.style.cursor='grab';
     if (save && previous.position) onPositionChange(previous.position);
+    if (save && previous.widthRatio!==undefined) onWidthChange(previous.widthRatio);
     render();
   };
   box.addEventListener('pointerdown', event => {
     if (event.button !== 0 || drag) return;
     event.preventDefault();event.stopPropagation();
     const rect=host.getBoundingClientRect();
-    drag={id:event.pointerId, video:getState().video, x:event.clientX-rect.left, y:event.clientY-rect.top};
-    box.setPointerCapture(event.pointerId);box.style.cursor='grabbing';
+    drag={id:event.pointerId, video:getState().video, x:event.clientX-rect.left, y:event.clientY-rect.top,
+      side:event.target.dataset?.side, initial:rect, startX:event.clientX, startVideo:getState().video.getBoundingClientRect()};
+    box.setPointerCapture(event.pointerId);box.style.cursor=drag.side?'ew-resize':'grabbing';
   });
   box.addEventListener('pointermove', event => {
     if (!drag || event.pointerId !== drag.id) return;
     event.preventDefault();event.stopPropagation();
     const rect=drag.video.getBoundingClientRect();
+    if(drag.side){
+      if(rect.width!==drag.startVideo.width || rect.left!==drag.startVideo.left){finish();return;}
+      const edge=drag.side==='left'?drag.initial.left:drag.initial.right;
+      const resized=resizeSubtitle(rect,drag.initial,drag.side,edge+event.clientX-drag.startX);
+      drag.widthRatio=resized.widthRatio;
+      host.style.width=`${rect.width*drag.widthRatio}px`;
+      const dy=Math.max(0,rect.height-host.offsetHeight);
+      drag.position={x:resized.x,y:dy?clampSubtitle(drag.initial.top-rect.top,dy)/dy:0};
+      render();return;
+    }
     const dx=Math.max(0,rect.width-host.offsetWidth), dy=Math.max(0,rect.height-host.offsetHeight);
     drag.position={x:dx ? clampSubtitle(event.clientX-drag.x-rect.left,dx)/dx : .5,
       y:dy ? clampSubtitle(event.clientY-drag.y-rect.top,dy)/dy : 0};
@@ -254,7 +288,7 @@ function mountRenderer(getState, onPositionChange = () => {}) {
   box.addEventListener('lostpointercapture', event => finish(event));
   box.addEventListener('click', event => {event.preventDefault();event.stopPropagation();});
   const render = () => {
-    const {video,cues,mode,offset,enabled,transparency=22,position=null,textColor='#ffffff',backgroundColor='#000000'} = getState();
+    const {video,cues,mode,offset,enabled,transparency=22,position=null,textColor='#ffffff',backgroundColor='#000000',widthRatio=.88} = getState();
     if (drag && (drag.video!==video || !video?.isConnected || !enabled || document.fullscreenElement===video)) {finish();return;}
     if (!video?.isConnected || !enabled) {host.style.display='none';return;}
     const fullscreen = document.fullscreenElement;
@@ -267,9 +301,9 @@ function mountRenderer(getState, onPositionChange = () => {}) {
     const content=active.map(c => mode==='original'?cleanSubtitleLines(c.text):mode==='translated'?cleanSubtitleLines(c.translation):[cleanSubtitleLines(c.text),cleanSubtitleLines(c.translation)].filter(Boolean).join('\n')).join('\n');
     box.style.color=subtitleColor(textColor);
     box.style.background=subtitleBackground(backgroundColor,transparency);
-    if(!drag && content!==last){box.textContent=content;last=content;}
+    if(!drag && content!==last){text.textContent=content;last=content;}
     host.style.display=(drag ? last : content) && r.width && r.height ? 'block':'none';
-    host.style.width=`${r.width*.88}px`;
+    host.style.width=`${r.width*subtitleWidth(drag?.widthRatio ?? widthRatio)}px`;
     box.style.maxHeight=`${Math.min(r.height,window.innerHeight*.4)}px`;
     const placement=subtitlePlacement(r,host.offsetWidth,host.offsetHeight,drag?.position || position);
     host.style.left=`${placement.left}px`;host.style.top=`${placement.top}px`;
@@ -440,7 +474,7 @@ async function getKalturaSRT(signal,progress=()=>{}) {
   let cues=[], video=null, controller=null, enabled=true, source='';
   let importController=null, autoAttempted=false;
   const appearanceKey=`cbs:subtitle-appearance:${location.origin}:${window===window.top?'page':'frame'}`;
-  let appearance={transparency:22,position:null,textColor:'#ffffff',backgroundColor:'#000000',...GM_getValue(appearanceKey,{})};
+  let appearance={widthRatio:.88,transparency:22,position:null,textColor:'#ffffff',backgroundColor:'#000000',...GM_getValue(appearanceKey,{})};
   const cachePrefix='cbs:cache:';
   const digest=async key => [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key)))].map(b=>b.toString(16).padStart(2,'0')).join('');
   const store={
@@ -459,7 +493,7 @@ async function getKalturaSRT(signal,progress=()=>{}) {
   const root=host.attachShadow({mode:'closed'});
   root.innerHTML=`<style>
   *{box-sizing:border-box} :host{font:14px/1.5 system-ui;color:#e9eef9}button,input,select{font:inherit}button{cursor:pointer;background:#2463bb;color:white;border:0;border-radius:6px;padding:6px 10px;margin:3px}button:disabled{opacity:.5;cursor:default}section{position:fixed;background:#172235;padding:14px;border:1px solid #53647b;border-radius:12px;width:340px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0008}label{display:block;margin:8px 0}input:not([type=checkbox]),select{display:block;width:100%;padding:5px;background:#fff;color:#111;border-radius:4px;border:1px solid #aaa}input[type=color]{height:36px;padding:2px;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace}small{color:#b9c9df}h3{margin:0} [hidden]{display:none!important}</style>
-  <button id="toggle">双语字幕</button><section hidden id="panel"><h3>Canvas 双语字幕 · v0.3.2</h3>
+  <button id="toggle">双语字幕</button><section hidden id="panel"><h3>Canvas 双语字幕 · v0.3.3</h3>
   <small>可自动获取当前视频的英文 SRT；开启自动翻译后会发送给所选服务。</small>
   <button id="inspect">检测播放器</button><label>绑定视频<select id="video"></select></label><small id="playerSummary"></small><details><summary>高级诊断（排查时展开）</summary><pre id="diagnostic"></pre></details>
   <button id="autoGet">自动获取并翻译</button><label><input id="autoImport" type="checkbox"> 打开视频后自动获取英文字幕</label><label><input id="autoTranslate" type="checkbox"> 获取后自动翻译（可能按量计费）</label><small id="subtitleSource">尚未导入字幕</small><label>手动导入英文 SRT<input id="file" type="file" accept=".srt,text/plain,application/x-subrip"></label>
@@ -475,7 +509,8 @@ async function getKalturaSRT(signal,progress=()=>{}) {
   <label>字幕文字颜色<input id="textColor" type="color" value="#ffffff"></label>
   <label>字幕背景颜色<input id="backgroundColor" type="color" value="#000000"></label>
   <label>字幕背景透明度：<output id="transparencyValue"></output><input id="transparency" type="range" min="0" max="100" step="1"></label>
-  <small>0% 为不透明背景，100% 为完全透明；文字保持不透明。拖动显示中的字幕可调整位置，松开后自动保存。</small>
+  <small>0% 为不透明背景，100% 为完全透明；文字保持不透明。拖动字幕中间调整位置，拖动左右边缘调整宽度，松开后自动保存。</small>
+  <button id="resetSubtitleWidth">恢复字幕默认宽度</button>
   <button id="resetSubtitlePosition">恢复字幕默认位置</button>
   <label><input id="enabled" type="checkbox" checked> 显示字幕</label>
   <p id="status" role="status" aria-live="polite">尚未导入字幕</p></section>`;
@@ -587,7 +622,11 @@ async function getKalturaSRT(signal,progress=()=>{}) {
   $('enabled').onchange=()=>{enabled=$('enabled').checked;};
   const stop=mountRenderer(()=>({video,cues,mode:$('mode').value,offset:Number($('offset').value)||0,enabled,...appearance}),position=>{
     appearance.position=position;GM_setValue(appearanceKey,appearance);
-  });
+  },widthRatio=>{appearance.widthRatio=widthRatio;GM_setValue(appearanceKey,appearance);});
+  $('resetSubtitleWidth').onclick=()=>{
+    stop.cancelDrag();appearance.widthRatio=.88;GM_setValue(appearanceKey,appearance);
+    status('字幕已恢复默认宽度');
+  };
   $('resetSubtitlePosition').onclick=()=>{
     stop.cancelDrag();appearance.position=null;GM_setValue(appearanceKey,appearance);
     status('字幕已恢复默认底部位置');

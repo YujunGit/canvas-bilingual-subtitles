@@ -56,13 +56,35 @@ export function subtitlePlacement(rect, width, height, position) {
   return {left:rect.left + (custom ? clampSubtitle(position.x, 1) * dx : dx / 2),
     top:rect.top + (custom ? clampSubtitle(position.y, 1) * dy : Math.max(0, dy - Math.max(48, rect.height * .12)))};
 }
-export function mountRenderer(getState, onPositionChange = () => {}) {
+export function subtitleWidth(value) {
+  return Number.isFinite(value) ? Math.min(1,Math.max(.2,value)) : .88;
+}
+export function resizeSubtitle(rect, initial, side, pointerX) {
+  const minWidth=rect.width*.2;
+  const edge=side==='left' ? initial.right : initial.left;
+  const left=side==='left' ? Math.max(rect.left,Math.min(pointerX,edge-minWidth)) : edge;
+  const right=side==='right' ? Math.min(rect.left+rect.width,Math.max(pointerX,edge+minWidth)) : edge;
+  const width=right-left, travel=rect.width-width;
+  return {widthRatio:subtitleWidth(width/rect.width),x:travel>0 ? (left-rect.left)/travel : .5};
+}
+export function mountRenderer(getState, onPositionChange = () => {}, onWidthChange = () => {}) {
   const host = document.createElement('div');
   const shadow = host.attachShadow({mode:'closed'});
   const box = document.createElement('div');
   box.title='拖动字幕可调整位置';
   box.style.cssText='pointer-events:auto;cursor:grab;touch-action:none;user-select:none;box-sizing:border-box;white-space:pre-line;text-align:center;color:white;background:rgba(0,0,0,.78);padding:6px 12px;border-radius:6px;font:clamp(14px,2.1vw,24px)/1.4 system-ui;overflow-wrap:anywhere;max-height:40vh;overflow:hidden';
-  shadow.append(box);
+  const text=document.createElement('div');
+  box.append(text);
+  const style=document.createElement('style');
+  style.textContent='.resize-handle{position:absolute;top:0;bottom:0;width:12px;cursor:ew-resize;touch-action:none;opacity:0;border:0;padding:0;background:transparent}.resize-handle::after{content:"";position:absolute;top:25%;bottom:25%;left:4px;width:3px;background:white;box-shadow:0 0 2px black;border-radius:2px}div:hover>.resize-handle,.resize-handle:focus-visible{opacity:1}';
+  for(const side of ['left','right']){
+    const handle=document.createElement('span');
+    handle.className='resize-handle';handle.dataset.side=side;handle.style[side]='0';
+    handle.title=side==='left'?'拖动左边缘调整宽度':'拖动右边缘调整宽度';
+    box.append(handle);
+  }
+  box.style.position='relative';
+  shadow.append(style,box);
   host.style.cssText='position:fixed;pointer-events:none;z-index:2147483646;display:none';
   document.documentElement.append(host);
   let last = '', drag = null;
@@ -72,19 +94,31 @@ export function mountRenderer(getState, onPositionChange = () => {}) {
     if (box.hasPointerCapture(previous.id)) box.releasePointerCapture(previous.id);
     box.style.cursor='grab';
     if (save && previous.position) onPositionChange(previous.position);
+    if (save && previous.widthRatio!==undefined) onWidthChange(previous.widthRatio);
     render();
   };
   box.addEventListener('pointerdown', event => {
     if (event.button !== 0 || drag) return;
     event.preventDefault();event.stopPropagation();
     const rect=host.getBoundingClientRect();
-    drag={id:event.pointerId, video:getState().video, x:event.clientX-rect.left, y:event.clientY-rect.top};
-    box.setPointerCapture(event.pointerId);box.style.cursor='grabbing';
+    drag={id:event.pointerId, video:getState().video, x:event.clientX-rect.left, y:event.clientY-rect.top,
+      side:event.target.dataset?.side, initial:rect, startX:event.clientX, startVideo:getState().video.getBoundingClientRect()};
+    box.setPointerCapture(event.pointerId);box.style.cursor=drag.side?'ew-resize':'grabbing';
   });
   box.addEventListener('pointermove', event => {
     if (!drag || event.pointerId !== drag.id) return;
     event.preventDefault();event.stopPropagation();
     const rect=drag.video.getBoundingClientRect();
+    if(drag.side){
+      if(rect.width!==drag.startVideo.width || rect.left!==drag.startVideo.left){finish();return;}
+      const edge=drag.side==='left'?drag.initial.left:drag.initial.right;
+      const resized=resizeSubtitle(rect,drag.initial,drag.side,edge+event.clientX-drag.startX);
+      drag.widthRatio=resized.widthRatio;
+      host.style.width=`${rect.width*drag.widthRatio}px`;
+      const dy=Math.max(0,rect.height-host.offsetHeight);
+      drag.position={x:resized.x,y:dy?clampSubtitle(drag.initial.top-rect.top,dy)/dy:0};
+      render();return;
+    }
     const dx=Math.max(0,rect.width-host.offsetWidth), dy=Math.max(0,rect.height-host.offsetHeight);
     drag.position={x:dx ? clampSubtitle(event.clientX-drag.x-rect.left,dx)/dx : .5,
       y:dy ? clampSubtitle(event.clientY-drag.y-rect.top,dy)/dy : 0};
@@ -95,7 +129,7 @@ export function mountRenderer(getState, onPositionChange = () => {}) {
   box.addEventListener('lostpointercapture', event => finish(event));
   box.addEventListener('click', event => {event.preventDefault();event.stopPropagation();});
   const render = () => {
-    const {video,cues,mode,offset,enabled,transparency=22,position=null,textColor='#ffffff',backgroundColor='#000000'} = getState();
+    const {video,cues,mode,offset,enabled,transparency=22,position=null,textColor='#ffffff',backgroundColor='#000000',widthRatio=.88} = getState();
     if (drag && (drag.video!==video || !video?.isConnected || !enabled || document.fullscreenElement===video)) {finish();return;}
     if (!video?.isConnected || !enabled) {host.style.display='none';return;}
     const fullscreen = document.fullscreenElement;
@@ -108,9 +142,9 @@ export function mountRenderer(getState, onPositionChange = () => {}) {
     const content=active.map(c => mode==='original'?cleanSubtitleLines(c.text):mode==='translated'?cleanSubtitleLines(c.translation):[cleanSubtitleLines(c.text),cleanSubtitleLines(c.translation)].filter(Boolean).join('\n')).join('\n');
     box.style.color=subtitleColor(textColor);
     box.style.background=subtitleBackground(backgroundColor,transparency);
-    if(!drag && content!==last){box.textContent=content;last=content;}
+    if(!drag && content!==last){text.textContent=content;last=content;}
     host.style.display=(drag ? last : content) && r.width && r.height ? 'block':'none';
-    host.style.width=`${r.width*.88}px`;
+    host.style.width=`${r.width*subtitleWidth(drag?.widthRatio ?? widthRatio)}px`;
     box.style.maxHeight=`${Math.min(r.height,window.innerHeight*.4)}px`;
     const placement=subtitlePlacement(r,host.offsetWidth,host.offsetHeight,drag?.position || position);
     host.style.left=`${placement.left}px`;host.style.top=`${placement.top}px`;

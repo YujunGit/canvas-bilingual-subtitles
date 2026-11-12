@@ -82,7 +82,7 @@ The initial display mode is bilingual. You can switch to original-only or transl
 
 Use **字幕背景透明度** (Subtitle background transparency) for a live preview; releasing the slider saves the setting. At 0% the background is opaque, and at 100% it is fully transparent. Text remains opaque. The default transparency is 22%. Use **字幕文字颜色** (Subtitle text color) and **字幕背景颜色** (Subtitle background color) to preview colors and save them on confirmation. Defaults are white text on a black background; background color and transparency work together.
 
-Drag the visible subtitle area to reposition it; releasing saves the position. The box stays inside the video and uses relative positioning when video dimensions change. The background retains its original width, so horizontal travel is limited. Click **恢复字幕默认位置** (Restore default subtitle position) to return to the bottom. Appearance settings are saved separately by site and page/player-frame context.
+Drag the visible subtitle area to reposition it; releasing saves the position. The box stays inside the video and uses relative positioning when video dimensions change. Hover over the subtitle box to reveal handles on its left and right edges. Drag either edge to resize it while keeping the opposite edge fixed; text wraps to the new width. Width is saved as a proportion of the video (20–100%, default 88%). Use **恢复字幕默认宽度** (Restore default subtitle width) to reset it. Click **恢复字幕默认位置** (Restore default subtitle position) to return to the bottom. Appearance settings are saved separately by site and page/player-frame context.
 
 ## Compatibility and limitations
 
@@ -168,6 +168,13 @@ Results must match the input length and order. Update the cache version or cache
 ## Changelog
 
 Versions are listed newest first. Dates indicate implementation dates, not published GitHub Releases.
+
+### v0.3.3 · 2026-11-12
+
+- Resize the subtitle box by dragging its left or right edge, with automatic width saving and a reset control.
+- Preserve dragging from the middle to reposition subtitles; keep resizing within video bounds.
+- Save width relative to the video (20–100%, default 88%) and wrap text to fit.
+- Add resize boundary tests; all 21 automated tests and build checks pass. Browser interaction has not been verified for this version.
 
 ### v0.3.2 · 2026-11-11
 
