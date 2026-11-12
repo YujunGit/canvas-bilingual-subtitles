@@ -1,115 +1,149 @@
-# Canvas / Kaltura 双语字幕
+# Canvas / Kaltura Bilingual Subtitles
 
-为 Canvas 中的 Kaltura 课程视频添加同步双语字幕的 Tampermonkey 用户脚本。支持自动获取英文 SRT，通过 Google Cloud Translation 或 Azure AI Translator 翻译，并缓存结果。
+**English** | [简体中文](README.zh-CN.md)
 
-> 自动获取适配 Kaltura PlayKit 的字幕下载面板。不同学校的播放器配置可能不同；无法自动获取时，可手动导入 SRT。
+A Tampermonkey userscript that adds synchronized bilingual subtitles to Kaltura course videos in Canvas. Automatically import English SRT captions, translate them with Google Cloud Translation or Azure AI Translator, and cache the results.
 
-## 功能
+> Automatic import targets the Kaltura PlayKit downloads panel. Player configurations vary between institutions; manual SRT import remains available when automatic retrieval fails.
 
-- **自动获取字幕**：识别下载面板中唯一的英文 SRT，直接导入，无需从下载文件夹再次选择。
-- **可选自动翻译**：视频加载后自动获取、翻译并显示字幕，也可手动执行一次完整流程。
-- **两种翻译服务**：Google Cloud Translation Basic v2、Azure AI Translator，可通过 Provider Adapter 扩展。
-- **同步显示**：支持双语、仅英文、仅译文，以及字幕时间偏移；跟随暂停、跳转和倍速播放。
-- **批量与缓存**：文本去重、分批请求、失败后复用已完成批次，支持取消和清空缓存。
-- **字幕外观**：背景透明度可调，字幕可拖动并记住位置，支持恢复默认位置。
-- **轻量设置面板**：按钮可拖动并记住位置，诊断信息默认折叠。
+## Features
 
-## 安装
+- **Automatic subtitle import:** Find the single English SRT entry in the downloads panel and import it directly, without selecting a file from your Downloads folder.
+- **Optional automatic translation:** Retrieve, translate, and display captions after a video loads, or run the workflow manually.
+- **Two translation providers:** Google Cloud Translation Basic v2 and Azure AI Translator, with an extensible Provider Adapter interface.
+- **Synchronized display:** Bilingual, original-only, and translation-only modes, plus a timing offset. Follows pauses, seeking, and playback speed changes.
+- **Batching and caching:** Deduplicate text, batch requests, reuse completed batches after failures, cancel translation, and clear the cache.
+- **Subtitle appearance:** Customize text and background colors and background transparency. Drag subtitles, remember their position, or restore the default position.
+- **Compact settings panel:** A draggable button with a saved position and diagnostics collapsed by default.
 
-1. 为浏览器安装 [Tampermonkey](https://www.tampermonkey.net/)，按扩展提示启用用户脚本及目标站点访问权限。
-2. 打开仓库中的 `dist/canvas-bilingual.user.js`，查看 **Raw / 原始内容**。
-3. 如果 Tampermonkey 弹出安装页，确认安装；否则创建新脚本，用文件的**完整内容替换**默认模板并保存。
-4. 刷新 Canvas 课程页面。
+## Roadmap
 
-更新时替换已有脚本的完整内容，不要把新代码追加到旧代码末尾。保留脚本名称和 namespace，避免创建重复实例。
+These items are planned and **not yet implemented**. Providers, compatibility, and release order will depend on feasibility testing and user feedback.
 
-## 快速开始
+### More translation APIs
 
-### 1. 配置翻译服务
+- [ ] Extend Provider Adapters and evaluate services such as DeepL, Baidu Translate, and Tencent Cloud Machine Translation.
+- [ ] Explore APIs for translation with large language models, including configurable OpenAI-compatible endpoints.
+- [ ] Add provider-specific credentials, language mappings, batch limits, and error messages while keeping translation caches isolated by provider.
+- [ ] Add setup documentation and tests for subtitle order, response formats, cancellation, and failure recovery.
 
-打开**播放器内部**的「双语字幕」面板，选择翻译服务、填写 API Key 和目标语言，然后点击「保存设置」。Google 与 Azure 的密钥分别保存。
+### More languages
 
-| 服务 | 必填设置 | 说明 |
+- [ ] Expand source and target language selection to support subtitle input beyond English and more translation language pairs.
+- [ ] Offer language options based on the selected provider's capabilities and explain unsupported combinations.
+- [ ] Improve subtitle layout for different writing systems, including right-to-left languages, and verify parsing, line wrapping, and synchronization.
+
+### macOS system translation
+
+- [ ] Explore integration with Apple's Translation framework through a local Provider using macOS translation capabilities.
+- [ ] Validate a local macOS companion app that calls the framework and communicates with the userscript, without assuming Tampermonkey can call native frameworks directly.
+- [ ] Verify system requirements, supported languages, language resource downloads, and offline conditions, and design the initial authorization and preparation flow.
+- [ ] Validate access controls for local communication, batch translation, cancellation, and error recovery. Prompt users to choose an existing online Provider when the local service is unavailable.
+
+This integration is exploratory. The current version does not support Apple Translation, and support for every language or macOS version is not promised.
+
+## Installation
+
+1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser and follow its prompts to enable userscripts and access to the target sites.
+2. Open `dist/canvas-bilingual.user.js` in this repository and select **Raw**.
+3. If Tampermonkey opens an installation page, confirm installation. Otherwise, create a new script, **replace the entire default template** with the file contents, and save.
+4. Refresh your Canvas course page.
+
+To update, replace the existing script's complete contents. Do not append new code to the old version. Keep the script name and namespace to avoid duplicate installations.
+
+## Quick start
+
+The current settings UI uses Chinese labels; the relevant labels are included below to help you locate each control.
+
+### 1. Configure a translation provider
+
+Open the **双语字幕** (Bilingual Subtitles) panel **inside the player**. Select a provider, enter your API key and target language, and click **保存设置** (Save settings). Google and Azure keys are stored separately.
+
+| Provider | Required settings | Notes |
 | --- | --- | --- |
-| Google Cloud Translation Basic v2 | API Key、目标语言 | 使用已开通相应 API 的项目密钥 |
-| Azure AI Translator | API Key、目标语言 | 按资源配置填写区域；适用的全局单服务资源可留空 |
+| Google Cloud Translation Basic v2 | API key, target language | Use a key from a project with the corresponding API enabled |
+| Azure AI Translator | API key, target language | Enter the region required by your resource; applicable global single-service resources may leave it empty |
 
-目标语言提供简体中文、繁体中文、日语和韩语。源语言为英语。
+Current target languages are Simplified Chinese, Traditional Chinese, Japanese, and Korean. The source language is English.
 
-### 2. 获取字幕
+### 2. Import subtitles
 
-加载课程视频，必要时先点击播放。默认启用「打开视频后自动获取英文字幕」。获取成功后，面板会显示文件名和字幕段数。
+Load the course video and start playback if necessary. **打开视频后自动获取英文字幕** (Automatically retrieve English subtitles after loading a video) is enabled by default. On success, the panel shows the filename and cue count.
 
-自动获取失败时，从播放器右上角下载面板下载英文 `.srt`，再使用「手动导入英文 SRT」。不带时间戳的普通转录文本不能用于同步。
+If automatic retrieval fails, download the English `.srt` from the player's upper-right downloads panel and use **手动导入英文 SRT** (Manually import English SRT). Plain transcripts without timestamps cannot be synchronized.
 
-### 3. 翻译与显示
+### 3. Translate and display
 
-- 点击「自动获取并翻译」，执行一次获取、导入和翻译。
-- 已导入字幕时，点击「批量翻译」。
-- 勾选「获取后自动翻译」后，后续视频会自动继续翻译；此开关立即保存。**自动翻译默认关闭**，启用后可能产生 API 费用。
+- Click **自动获取并翻译** (Automatically retrieve and translate) to retrieve, import, and translate in one step.
+- If captions are already imported, click **批量翻译** (Batch translate).
+- Enable **获取后自动翻译** (Automatically translate after retrieval) to translate subsequent videos automatically. This setting saves immediately. **Automatic translation is off by default** and may incur API charges when enabled.
 
-显示模式首次默认为双语，可切换为仅英文或仅译文；选择后自动保存，刷新页面时恢复上次选择，无需点击「保存设置」。字幕不同步时可调整延迟：正数让字幕晚出现。若与原播放器字幕重叠，可手动关闭播放器自带字幕。
+The initial display mode is bilingual. You can switch to original-only or translation-only; the choice saves automatically and is restored after refresh without clicking Save settings. Adjust the subtitle delay if needed: positive values make captions appear later. Disable the player's own captions manually if they overlap.
 
-在面板中拖动「字幕背景透明度」滑块即时预览，松开后自动保存：0% 为纯黑背景，100% 为完全透明，文字不受影响。默认透明度为 22%。
+Use **字幕背景透明度** (Subtitle background transparency) for a live preview; releasing the slider saves the setting. At 0% the background is opaque, and at 100% it is fully transparent. Text remains opaque. The default transparency is 22%. Use **字幕文字颜色** (Subtitle text color) and **字幕背景颜色** (Subtitle background color) to preview colors and save them on confirmation. Defaults are white text on a black background; background color and transparency work together.
 
-字幕显示时，按住字幕区域拖动即可调整位置，松开后自动保存。位置限制在视频范围内，按相对位置适配视频尺寸变化；背景保留原有宽度，因此左右移动范围较小。点击「恢复字幕默认位置」可回到底部。外观设置按站点与页面／播放器帧分别保存。
+Drag the visible subtitle area to reposition it; releasing saves the position. The box stays inside the video and uses relative positioning when video dimensions change. The background retains its original width, so horizontal travel is limited. Click **恢复字幕默认位置** (Restore default subtitle position) to return to the bottom. Appearance settings are saved separately by site and page/player-frame context.
 
-## 兼容性与限制
+## Compatibility and limitations
 
-- 脚本分别在匹配的页面和 iframe 中运行。Canvas 外层也可能出现按钮，请使用实际播放器内的面板。
-- 默认匹配 `*.instructure.com`、`cdnapisec.kaltura.com` 和 `*.mediaspace.kaltura.com`。自定义学校域名需要添加对应的 `@match`。
-- 只自动选择唯一已加载的视频；多个有效视频时需要手动选择。
-- 自动获取依赖下载面板存在唯一英文 SRT。多个候选、权限限制或播放器改版时会提示手动导入。
-- SRT 支持 UTF-8、BOM、CRLF 和多行文本；文件上限为 5 MB。
-- 支持普通页面中的字幕叠加；容器式全屏效果取决于播放器布局。原生 video 全屏和画中画不显示 DOM 叠加字幕。
-- 视频元素或视频源变化时会清空当前字幕，避免字幕串到另一视频。某些画质切换也可能触发重新获取。
+- The script runs independently in matching pages and iframes. A button may also appear on the outer Canvas page; use the panel inside the actual player.
+- Default matches are `*.instructure.com`, `cdnapisec.kaltura.com`, and `*.mediaspace.kaltura.com`. Custom institutional domains require an appropriate `@match` entry.
+- Only a single unambiguous loaded video is selected automatically. Multiple valid videos require manual selection.
+- Automatic retrieval requires exactly one English SRT entry in the downloads panel. Ambiguous candidates, permission restrictions, or player changes may require manual import.
+- SRT supports UTF-8, BOM, CRLF, and multiline text, with a 5 MB file limit.
+- Subtitle overlays work on normal pages. Container fullscreen behavior depends on the player layout. Native video fullscreen and picture-in-picture do not display the DOM subtitle overlay.
+- Replacing the video element or changing its source clears the current captions to prevent displaying captions from another video. Some quality changes may also trigger retrieval again.
 
-## 数据存储与费用
+## Storage and costs
 
-API Key 和设置保存在 Tampermonkey 的脚本存储中，不放在网页的 localStorage，也不写入项目文件。该存储不是加密钥匙串；扩展备份和同步设置可能影响数据去向。
+API keys and settings are stored in Tampermonkey's script storage, not the webpage's localStorage or project files. This storage is not an encrypted keychain; extension backup and synchronization settings may affect where data goes.
 
-翻译时，字幕正文发送给用户选择的 Google 或 Azure 服务。Google v2 的密钥放在请求 URL 参数中，Azure 密钥放在请求头中；分享网络请求记录时应先脱敏。
+Translation sends subtitle text to the selected Google or Azure service. Google v2 places the key in a request URL parameter; Azure places it in a request header. Redact credentials before sharing network logs.
 
-译文缓存按服务、版本、源语言、目标语言及原文区分，有效期为 30 天，启动和翻译完成时清理到最多 5000 条。重新获取相同字幕时会复用有效缓存。字幕源文件只保留在当前页面内存中。
+Cache entries are separated by provider, version, source language, target language, and original text. They expire after 30 days and are trimmed to at most 5,000 entries at startup and after translation. Retrieving identical captions can reuse valid cached translations. Source subtitle files remain only in the current page's memory.
 
-每批最多 50 条、4500 个 UTF-16 字符。HTTP 429 最多自动重试两次；其他请求失败需手动重试。取消无法撤回已经发送的请求或费用。多个标签页同时处理相同字幕仍可能产生重复请求。
+Each batch contains at most 50 texts and 4,500 UTF-16 characters. HTTP 429 responses are retried up to twice; other request failures require a manual retry. Cancellation cannot undo requests already sent or their charges. Multiple tabs translating the same captions may still send duplicate requests.
 
-## 常见问题
+## Troubleshooting
 
-**已经翻译完成，但没有字幕？**  
-点击「检测播放器」，确认绑定的是有实际时长的课程视频，而不是显示「? 秒」的备用元素；同时检查显示模式和「显示字幕」开关。
+**Translation finished, but no subtitles appear?**
 
-**点击按钮没有反应，或者显示了一大段代码？**  
-检查是否混入了不同版本的代码或重复安装。用完整脚本覆盖更新，并刷新课程页面。
+Click **检测播放器** (Inspect player). Check that the selected course video has a real duration rather than a standby element showing “? 秒”. Also check the display mode and **显示字幕** (Show subtitles) toggle.
 
-**没有自动获取字幕？**  
-先加载视频，再点击「自动获取并翻译」。确认下载面板提供英文 SRT；仍失败时使用手动导入，并展开「高级诊断」查看播放器状态。
+**The button does nothing, or a large block of code appears?**
 
-**修改了源码，浏览器为什么没变化？**  
-浏览器运行已安装的构建文件。源码修改需要重新构建并更新用户脚本，随后刷新课程页面。
+Check for mixed versions or duplicate installations. Replace the entire userscript with the updated file and refresh the course page.
 
-## 开发与扩展
+**Automatic retrieval does not work?**
 
-项目使用 JavaScript ES Modules，构建与测试不依赖第三方 npm 包。需要支持内置测试运行器的 Node.js，已在 Node.js 24 环境运行。
+Load the video, then click **自动获取并翻译**. Confirm that the downloads panel offers English SRT captions. If it still fails, import manually and expand **高级诊断** (Advanced diagnostics) to inspect the player state.
+
+**Source edits do not appear in the browser?**
+
+The browser runs the installed build. Rebuild and update the userscript after changing the source, then refresh the course page.
+
+## Development and extension
+
+The project uses JavaScript ES Modules with no third-party npm dependencies for building or testing. Use Node.js with its built-in test runner; the project has been run on Node.js 24.
 
 ```sh
 npm run build
 npm test
 ```
 
-| 文件 | 职责 |
+| File | Responsibility |
 | --- | --- |
-| `src/main.js` | 设置面板、存储与流程调度 |
-| `src/auto-subtitles.js` | 英文 SRT 识别、下载捕获与自动导入 |
-| `src/subtitles.js` | SRT 解析、字幕选择与批次划分 |
-| `src/providers.js` | 翻译适配器与网络传输 |
-| `src/translation.js` | 去重、缓存、重试与取消 |
-| `src/player.js` | 视频探测、绑定与字幕渲染 |
-| `src/floating-ui.js` | 可拖动按钮与面板定位 |
-| `build.mjs` | 生成独立 userscript |
-| `test/` | 解析、适配器、缓存和自动导入测试 |
+| `src/main.js` | Settings UI, storage, and workflow orchestration |
+| `src/auto-subtitles.js` | English SRT discovery, download capture, and automatic import |
+| `src/subtitles.js` | SRT parsing, active cue selection, and batching |
+| `src/providers.js` | Translation adapters and network transport |
+| `src/translation.js` | Deduplication, caching, retries, and cancellation |
+| `src/player.js` | Video discovery, binding, and subtitle rendering |
+| `src/floating-ui.js` | Draggable button and panel positioning |
+| `build.mjs` | Standalone userscript generation |
+| `test/` | Parsing, adapter, cache, and automatic import tests |
 
-新增服务时在 Provider 注册表实现以下接口，再补充凭据 UI 和精确的 `@connect` 域名：
+To add a service, implement this interface in the Provider registry, then add credential controls and precise `@connect` domains:
 
 ```js
 {
@@ -117,80 +151,89 @@ npm test
   version,
   name,
   language(target),
-  async translate(texts, config, post) { /* 返回 string[] */ }
+  async translate(texts, config, post) { /* Return string[] */ }
 }
 ```
 
-返回结果必须与输入等长、顺序一致。翻译模型或影响结果的配置变化时，需要更新缓存版本或缓存键。
+Results must match the input length and order. Update the cache version or cache key when changing the translation model or settings that affect the output.
 
-### 验证范围
+### Validation coverage
 
-- 已在 Edge、Tampermonkey 和一个 Canvas / Kaltura PlayKit 课程环境中验证自动导入英文 SRT，以及 Google 翻译流程。
-- Azure 请求格式有模拟测试覆盖，尚未完成真实密钥端到端验证。
-- 自动测试覆盖 SRT 格式、时间边界、视频选择、请求格式、缓存隔离、取消、失败恢复和下载捕获。
-- 完整测试中的课程 SRT 夹具不随仓库发布。运行相关测试前，请在 `test/fixtures/lecture.srt` 放入获授权的测试文件；现有夹具专用断言需要按新样本调整。
-- 不保证所有学校配置、浏览器、全屏模式或未来播放器版本都兼容。
+- Automatic English SRT import and Google translation have been validated with Edge, Tampermonkey, and one Canvas / Kaltura PlayKit course environment.
+- Azure request formats have mock test coverage; end-to-end testing with a real key has not been completed.
+- Automated tests cover SRT formats, timing boundaries, video selection, request formats, cache isolation, cancellation, failure recovery, and download capture.
+- The course SRT fixture used by the full test suite is not distributed with this repository. Before running those tests, place an authorized test file at `test/fixtures/lecture.srt`; fixture-specific assertions must be adjusted to match the new sample.
+- Compatibility with every institutional setup, browser, fullscreen mode, or future player version is not guaranteed.
 
-## 更新记录
+## Changelog
 
-以下记录按版本倒序排列；版本日期为实现日期，不代表已发布 GitHub Release。
+Versions are listed newest first. Dates indicate implementation dates, not published GitHub Releases.
+
+### v0.3.2 · 2026-11-11
+
+- Add subtitle text and background color settings with live preview and automatic saving.
+- Combine background color with the existing transparency setting; retain white-on-black defaults.
 
 ### v0.3.1 · 2026-11-11
 
-- 显示模式首次默认为双语，切换后自动保存并在刷新后恢复。
-- 独立保存显示模式，避免其他页面或播放器帧保存配置时覆盖该选择。
+- Default the initial display mode to bilingual; automatically save changes and restore them after refresh.
+- Store display mode separately so configuration saves from other pages or player frames do not overwrite the choice.
 
 ### v0.3.0 · 2026-11-11
 
-- 新增字幕背景透明度滑块，实时预览并自动保存，文字保持不透明。
-- 支持拖动字幕、记住相对位置、限制在视频内及恢复默认位置。
-- 拖动期间保留当前字幕，避免字幕切换导致拖动中断。
-- 已完成自动测试与构建检查；本版浏览器交互由使用者验证。
+- Add a background transparency slider with live preview and automatic saving while keeping text opaque.
+- Support dragging subtitles, saving relative positions, constraining the box to the video, and restoring its default position.
+- Keep the current caption visible during a drag to prevent cue changes from interrupting it.
+- Complete automated tests and build checks; browser interaction validation for this version is left to the user.
 
 ### v0.2.1 · 2026-11-08
 
-- 修正下载面板关闭控件的匹配方式，兼容带 `aria-label` 的非 button 元素。
-- 自动识别字幕时忽略隐藏的下载条目。
+- Fix matching of the downloads panel close control, including non-button elements with `aria-label`.
+- Ignore hidden download entries during subtitle discovery.
 
 ### v0.2.0 · 2026-11-08
 
-- 新增英文 SRT 自动获取与导入，复用 Kaltura 下载面板的现有下载流程。
-- 新增「自动获取并翻译」按钮，以及自动获取、自动翻译两个独立开关。
-- 显示导入文件名和字幕段数，自动导入后可继续使用缓存或调用翻译服务。
-- 增加候选歧义、超时、取消、文件大小及视频切换检查；失败时保留手动导入。
-- 在真实课程页面验证自动导入 161 段英文字幕，并完成 Google 翻译。
+- Add automatic English SRT retrieval and import using the Kaltura downloads panel's existing workflow.
+- Add a retrieve-and-translate button and independent automatic retrieval and translation toggles.
+- Display the imported filename and cue count; reuse the cache or call the translation service after import.
+- Check for ambiguous candidates, timeouts, cancellation, file size, and video changes; retain manual import on failure.
+- Validate automatic import of 161 English cues and Google translation on a real course page.
 
 ### v0.1.4 · 2026-11-08
 
-- 清理字幕显示中的空白行，保留正常分行，修复中文两行之间出现额外空行的问题。
-- 显示清理同样适用于已缓存的译文，无需重新翻译。
+- Remove empty subtitle rows while preserving meaningful line breaks, fixing extra gaps between translated Chinese lines.
+- Apply display cleanup to cached translations without requiring translation again.
 
 ### v0.1.3 · 2026-11-08
 
-- 增加脚本更新元数据生成及版本检查支持。
-- 构建脚本统一从 `package.json` 读取安装版本号。
+- Add update metadata generation and version-check support.
+- Read the installation version consistently from `package.json` during builds.
 
 ### v0.1.2 · 2026-11-08
 
-- 将字幕按钮默认移至左侧，避开播放器右上角工具栏。
-- 支持拖动按钮、记住位置，以及根据窗口大小调整面板位置。
-- 将原始播放器诊断信息收纳到默认折叠的「高级诊断」中。
+- Move the subtitle button's default position to the left, away from the player's upper-right toolbar.
+- Support dragging the button, remembering its position, and adapting panel placement to window size.
+- Move raw player diagnostics into a collapsed Advanced diagnostics section.
 
 ### v0.1.1 · 2026-11-08
 
-- 修复误绑定 Kaltura 空备用视频，导致翻译完成后仍不显示字幕的问题。
-- 自动选择唯一已加载的视频，并在视频延迟加载时重新检测；多个有效视频保留手动选择。
+- Fix binding to Kaltura's empty standby video, which prevented translated subtitles from appearing.
+- Automatically select the single loaded video and detect delayed loading; retain manual selection for multiple valid videos.
 
 ### v0.1.0 · 2026-11-08
 
-- 提供模块化 Tampermonkey 脚本，支持 Google Cloud Translation Basic v2 和 Azure AI Translator。
-- 支持手动导入英文 SRT、配置面板、密钥保存、批量翻译、去重缓存及取消操作。
-- 实现双语、仅英文、仅译文显示，以及字幕同步和时间偏移。
-- 提供播放器诊断、iframe 兼容说明和可扩展的 Provider Adapter 接口。
+- Introduce a modular Tampermonkey script supporting Google Cloud Translation Basic v2 and Azure AI Translator.
+- Add manual English SRT import, a settings panel, key storage, batch translation, deduplication, caching, and cancellation.
+- Implement bilingual, original-only, and translation-only display with synchronization and timing offsets.
+- Add player diagnostics, iframe compatibility notes, and an extensible Provider Adapter interface.
 
-## 参考资料
+## References
 
-- [Tampermonkey 文档](https://www.tampermonkey.net/documentation.php)
+- [Tampermonkey documentation](https://www.tampermonkey.net/documentation.php)
 - [Google Cloud Translation v2](https://cloud.google.com/translate/docs/reference/rest/v2/translate)
 - [Azure Translator v3](https://learn.microsoft.com/en-us/azure/ai-services/translator/text-translation/reference/v3/translate)
-- [Kaltura 下载插件](https://github.com/kaltura/playkit-js-downloads)
+- [Kaltura downloads plugin](https://github.com/kaltura/playkit-js-downloads)
+
+## License
+
+This project uses the [MIT License](LICENSE). Retain the copyright notice and license text when using, modifying, or distributing it.

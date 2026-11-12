@@ -8,7 +8,7 @@
   let cues=[], video=null, controller=null, enabled=true, source='';
   let importController=null, autoAttempted=false;
   const appearanceKey=`cbs:subtitle-appearance:${location.origin}:${window===window.top?'page':'frame'}`;
-  let appearance={transparency:22,position:null,...GM_getValue(appearanceKey,{})};
+  let appearance={transparency:22,position:null,textColor:'#ffffff',backgroundColor:'#000000',...GM_getValue(appearanceKey,{})};
   const cachePrefix='cbs:cache:';
   const digest=async key => [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key)))].map(b=>b.toString(16).padStart(2,'0')).join('');
   const store={
@@ -26,8 +26,8 @@
   host.style.cssText='position:fixed;left:12px;top:12px;z-index:2147483647';
   const root=host.attachShadow({mode:'closed'});
   root.innerHTML=`<style>
-  *{box-sizing:border-box} :host{font:14px/1.5 system-ui;color:#e9eef9}button,input,select{font:inherit}button{cursor:pointer;background:#2463bb;color:white;border:0;border-radius:6px;padding:6px 10px;margin:3px}button:disabled{opacity:.5;cursor:default}section{position:fixed;background:#172235;padding:14px;border:1px solid #53647b;border-radius:12px;width:340px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0008}label{display:block;margin:8px 0}input:not([type=checkbox]),select{display:block;width:100%;padding:5px;background:#fff;color:#111;border-radius:4px;border:1px solid #aaa}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace}small{color:#b9c9df}h3{margin:0} [hidden]{display:none!important}</style>
-  <button id="toggle">双语字幕</button><section hidden id="panel"><h3>Canvas 双语字幕 · v0.3.1</h3>
+  *{box-sizing:border-box} :host{font:14px/1.5 system-ui;color:#e9eef9}button,input,select{font:inherit}button{cursor:pointer;background:#2463bb;color:white;border:0;border-radius:6px;padding:6px 10px;margin:3px}button:disabled{opacity:.5;cursor:default}section{position:fixed;background:#172235;padding:14px;border:1px solid #53647b;border-radius:12px;width:340px;max-width:90vw;max-height:80vh;overflow:auto;box-shadow:0 8px 30px #0008}label{display:block;margin:8px 0}input:not([type=checkbox]),select{display:block;width:100%;padding:5px;background:#fff;color:#111;border-radius:4px;border:1px solid #aaa}input[type=color]{height:36px;padding:2px;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 monospace}small{color:#b9c9df}h3{margin:0} [hidden]{display:none!important}</style>
+  <button id="toggle">双语字幕</button><section hidden id="panel"><h3>Canvas 双语字幕 · v0.3.2</h3>
   <small>可自动获取当前视频的英文 SRT；开启自动翻译后会发送给所选服务。</small>
   <button id="inspect">检测播放器</button><label>绑定视频<select id="video"></select></label><small id="playerSummary"></small><details><summary>高级诊断（排查时展开）</summary><pre id="diagnostic"></pre></details>
   <button id="autoGet">自动获取并翻译</button><label><input id="autoImport" type="checkbox"> 打开视频后自动获取英文字幕</label><label><input id="autoTranslate" type="checkbox"> 获取后自动翻译（可能按量计费）</label><small id="subtitleSource">尚未导入字幕</small><label>手动导入英文 SRT<input id="file" type="file" accept=".srt,text/plain,application/x-subrip"></label>
@@ -40,8 +40,10 @@
   <button id="translate">批量翻译</button><button id="cancel" disabled>取消</button><button id="clear">清空翻译缓存</button>
   <label>显示模式<select id="mode"><option value="bilingual">双语</option><option value="original">仅英文</option><option value="translated">仅译文</option></select></label>
   <label>字幕延迟（秒，正数让字幕晚出现）<input id="offset" type="number" step="0.1" value="0"></label>
+  <label>字幕文字颜色<input id="textColor" type="color" value="#ffffff"></label>
+  <label>字幕背景颜色<input id="backgroundColor" type="color" value="#000000"></label>
   <label>字幕背景透明度：<output id="transparencyValue"></output><input id="transparency" type="range" min="0" max="100" step="1"></label>
-  <small>0% 为纯黑背景，100% 为完全透明；文字保持不透明。拖动显示中的字幕可调整位置，松开后自动保存。</small>
+  <small>0% 为不透明背景，100% 为完全透明；文字保持不透明。拖动显示中的字幕可调整位置，松开后自动保存。</small>
   <button id="resetSubtitlePosition">恢复字幕默认位置</button>
   <label><input id="enabled" type="checkbox" checked> 显示字幕</label>
   <p id="status" role="status" aria-live="polite">尚未导入字幕</p></section>`;
@@ -60,6 +62,12 @@
     cfg.mode=$('mode').value;
     GM_setValue('cbs:display-mode',cfg.mode);
   };
+  for(const [id,fallback] of [['textColor','#ffffff'],['backgroundColor','#000000']]){
+    appearance[id]=subtitleColor(appearance[id],fallback);
+    $(id).value=appearance[id];
+    $(id).oninput=()=>{appearance[id]=$(id).value;};
+    $(id).onchange=()=>{appearance[id]=$(id).value;GM_setValue(appearanceKey,appearance);};
+  }
   $('transparency').value=100*(1-subtitleAlpha(appearance.transparency));
   const updateTransparency=()=>{
     appearance.transparency=Number($('transparency').value);

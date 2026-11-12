@@ -3,6 +3,7 @@ const {version}=JSON.parse(await readFile('package.json','utf8'));
 const header=`// ==UserScript==
 // @name         Canvas / Kaltura Bilingual Subtitles
 // @namespace    local.canvas-bilingual
+// @license      MIT
 // @version      ${version}
 // @updateURL    http://127.0.0.1:8765/canvas-bilingual.meta.js
 // @downloadURL  http://127.0.0.1:8765/canvas-bilingual.user.js

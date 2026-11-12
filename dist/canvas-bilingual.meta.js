@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Canvas / Kaltura Bilingual Subtitles
 // @namespace    local.canvas-bilingual
-// @version      0.3.1
+// @license      MIT
+// @version      0.3.2
 // @updateURL    http://127.0.0.1:8765/canvas-bilingual.meta.js
 // @downloadURL  http://127.0.0.1:8765/canvas-bilingual.user.js
 // @description  Inspect player, import SRT, translate with Google v2 or Azure

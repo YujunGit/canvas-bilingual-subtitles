@@ -37,6 +37,14 @@ export function cleanSubtitleLines(text = '') {
     .map(line => line.trim()).filter(Boolean).join('\n');
 }
 const clampSubtitle = (value, max) => Math.min(max, Math.max(0, value));
+export function subtitleColor(value, fallback = '#ffffff') {
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : fallback;
+}
+export function subtitleBackground(color, transparency) {
+  const hex = subtitleColor(color, '#000000');
+  const rgb = [1,3,5].map(start => parseInt(hex.slice(start,start+2),16));
+  return `rgba(${rgb.join(',')},${subtitleAlpha(transparency)})`;
+}
 export function subtitleAlpha(transparency) {
   const value = Number(transparency);
   return 1 - clampSubtitle(Number.isFinite(value) ? value : 22, 100) / 100;
@@ -87,7 +95,7 @@ export function mountRenderer(getState, onPositionChange = () => {}) {
   box.addEventListener('lostpointercapture', event => finish(event));
   box.addEventListener('click', event => {event.preventDefault();event.stopPropagation();});
   const render = () => {
-    const {video,cues,mode,offset,enabled,transparency=22,position=null} = getState();
+    const {video,cues,mode,offset,enabled,transparency=22,position=null,textColor='#ffffff',backgroundColor='#000000'} = getState();
     if (drag && (drag.video!==video || !video?.isConnected || !enabled || document.fullscreenElement===video)) {finish();return;}
     if (!video?.isConnected || !enabled) {host.style.display='none';return;}
     const fullscreen = document.fullscreenElement;
@@ -98,7 +106,8 @@ export function mountRenderer(getState, onPositionChange = () => {}) {
     const r=video.getBoundingClientRect();
     const active=activeCues(cues, video.currentTime-offset);
     const content=active.map(c => mode==='original'?cleanSubtitleLines(c.text):mode==='translated'?cleanSubtitleLines(c.translation):[cleanSubtitleLines(c.text),cleanSubtitleLines(c.translation)].filter(Boolean).join('\n')).join('\n');
-    box.style.background=`rgba(0,0,0,${subtitleAlpha(transparency)})`;
+    box.style.color=subtitleColor(textColor);
+    box.style.background=subtitleBackground(backgroundColor,transparency);
     if(!drag && content!==last){box.textContent=content;last=content;}
     host.style.display=(drag ? last : content) && r.width && r.height ? 'block':'none';
     host.style.width=`${r.width*.88}px`;
