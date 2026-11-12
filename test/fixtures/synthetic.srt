@@ -1,0 +1,24 @@
+1
+00:00:00,500 --> 00:00:02,000
+Welcome to the subtitle test.
+This is an original sample.
+
+2
+00:00:02,000 --> 00:00:04,250
+<b>The paper boat is blue.</b>
+
+3
+00:00:03,750 --> 00:00:05,000
+An overlapping caption appears.
+
+4
+00:00:06,000 --> 00:00:07,500
+The paper boat is blue.
+
+5
+00:00:08,000 --> 00:00:10,000
+A tiny robot says: "Hello!" 🤖
+
+6
+00:01:00,125 --> 00:01:02,750
+The test ends here.

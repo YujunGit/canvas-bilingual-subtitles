@@ -3,8 +3,8 @@
 // @namespace    local.canvas-bilingual
 // @license      MIT
 // @version      0.3.2
-// @updateURL    http://127.0.0.1:8765/canvas-bilingual.meta.js
-// @downloadURL  http://127.0.0.1:8765/canvas-bilingual.user.js
+// @updateURL    https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.meta.js
+// @downloadURL  https://raw.githubusercontent.com/YujunGit/canvas-bilingual-subtitles/main/dist/canvas-bilingual.user.js
 // @description  Inspect player, import SRT, translate with Google v2 or Azure
 // @match        https://*.instructure.com/*
 // @match        https://cdnapisec.kaltura.com/*

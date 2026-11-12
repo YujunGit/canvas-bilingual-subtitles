@@ -1,6 +1,7 @@
 node_modules/
 .firecrawl/
-test/fixtures/*.srt
+*.srt
+!test/fixtures/synthetic.srt
 README.local.md
 start-local.command
 .DS_Store

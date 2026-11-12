@@ -162,7 +162,7 @@ Results must match the input length and order. Update the cache version or cache
 - Automatic English SRT import and Google translation have been validated with Edge, Tampermonkey, and one Canvas / Kaltura PlayKit course environment.
 - Azure request formats have mock test coverage; end-to-end testing with a real key has not been completed.
 - Automated tests cover SRT formats, timing boundaries, video selection, request formats, cache isolation, cancellation, failure recovery, and download capture.
-- The course SRT fixture used by the full test suite is not distributed with this repository. Before running those tests, place an authorized test file at `test/fixtures/lecture.srt`; fixture-specific assertions must be adjusted to match the new sample.
+- Tests use `test/fixtures/synthetic.srt`, an original synthetic fixture distributed under the project's MIT License. No course subtitles are required. SRT files are ignored by default; only this synthetic fixture is explicitly allowed.
 - Compatibility with every institutional setup, browser, fullscreen mode, or future player version is not guaranteed.
 
 ## Changelog

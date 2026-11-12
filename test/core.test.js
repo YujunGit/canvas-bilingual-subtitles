@@ -4,12 +4,18 @@ import {readFile} from 'node:fs/promises';
 import {parseSRT,activeCues,batches} from '../src/subtitles.js';
 import {providers,gmPost,decodeEntities} from '../src/providers.js';
 import {translateCues,cacheKey} from '../src/translation.js';
-const fixture=await readFile(new URL('./fixtures/lecture.srt',import.meta.url),'utf8');
+const fixture=await readFile(new URL('./fixtures/synthetic.srt',import.meta.url),'utf8');
 const cues=parseSRT(fixture);
-test('uploaded SRT: all blocks preserved',()=>{
+test('synthetic SRT: text, timestamps, markup and repeated cues preserved',()=>{
  assert.equal(cues.length,(fixture.match(/-->/g)||[]).length);
- assert.equal(cues[0].start,.8);assert.equal(cues[0].end,3.495);
- assert.match(cues[0].text,/So from last\ntime we figured out/);
+ assert.equal(cues.length,6);
+ assert.deepEqual(cues[0],{start:.5,end:2,text:'Welcome to the subtitle test.\nThis is an original sample.'});
+ assert.equal(cues[1].text,'The paper boat is blue.');
+ assert.equal(cues[3].text,cues[1].text);
+ assert.equal(cues[4].text,'A tiny robot says: "Hello!" 🤖');
+ assert.equal(cues.at(-1).start,60.125);assert.equal(cues.at(-1).end,62.75);
+ assert.deepEqual(activeCues(cues,3.8),[cues[1],cues[2]]);
+ assert.deepEqual(activeCues(cues,5.5),[]);
  assert(cues.every(c=>c.end>c.start));
  console.log(JSON.stringify({cues:cues.length,first:cues[0].start,last:cues.at(-1).end,characters:cues.reduce((n,c)=>n+c.text.length,0),batches:batches([...new Set(cues.map(c=>c.text))]).length}));
 });
@@ -76,7 +82,7 @@ test('Kaltura preloader does not capture subtitle clock',()=>{
 
 import {cleanSubtitleLines} from '../src/player.js';
 test('subtitle display removes empty translated rows, including cached text',()=>{
- assert.equal(cleanSubtitleLines('并将这些权重\n \n代入概率公式。'), '并将这些权重\n代入概率公式。');
+ assert.equal(cleanSubtitleLines('小机器人挥手\n \n欢迎来到花园。'), '小机器人挥手\n欢迎来到花园。');
  assert.equal(cleanSubtitleLines(' a\r\n\r\nb\u2029\u2029c '),'a\nb\nc');
  assert.equal(cleanSubtitleLines(undefined),'');
 });

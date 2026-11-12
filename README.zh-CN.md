@@ -156,7 +156,7 @@ npm test
 - 已在 Edge、Tampermonkey 和一个 Canvas / Kaltura PlayKit 课程环境中验证自动导入英文 SRT，以及 Google 翻译流程。
 - Azure 请求格式有模拟测试覆盖，尚未完成真实密钥端到端验证。
 - 自动测试覆盖 SRT 格式、时间边界、视频选择、请求格式、缓存隔离、取消、失败恢复和下载捕获。
-- 完整测试中的课程 SRT 夹具不随仓库发布。运行相关测试前，请在 `test/fixtures/lecture.srt` 放入获授权的测试文件；现有夹具专用断言需要按新样本调整。
+- 测试使用项目原创的 `test/fixtures/synthetic.srt`，随项目按 MIT License 发布，无需课程字幕。默认忽略所有 SRT 文件，仅对此原创测试文件放行。
 - 不保证所有学校配置、浏览器、全屏模式或未来播放器版本都兼容。
 
 ## 更新记录
